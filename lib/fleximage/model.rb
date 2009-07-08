@@ -158,22 +158,24 @@ module Fleximage
     
     # Provides methods that every model instance that acts_as_fleximage needs.
     module InstanceMethods
-      
       # Returns the path to the master image file for this record.
-      #   
-      #   @some_image.directory_path #=> /var/www/myapp/uploaded_images
+      # 
+      # @some_image.directory_path #=> /var/www/myapp/uploaded_images
       #
       # If this model has a created_at field, it will use a directory 
       # structure based on the creation date, to prevent hitting the OS imposed
       # limit on the number files in a directory.
       #
-      #   @some_image.directory_path #=> /var/www/myapp/uploaded_images/2008/3/30
-      def directory_path
+      # @some_image.directory_path #=> /var/www/myapp/uploaded_images/2008/3/30
+      # Returns an absolute path by default
+      # Passing 'true' into the method will return the relative directory path
+      # @some_image.directory_path(true) #=> /uploaded_images/2008/3/30
+      def directory_path(relative = false)
         raise 'No image directory was defined, cannot generate path' unless self.class.image_directory
-        
+
         # base directory
-        directory = "#{RAILS_ROOT}/#{self.class.image_directory}"
-        
+        directory = relative ? "/#{self.class.image_directory}" : "#{RAILS_ROOT}/#{self.class.image_directory}"
+
         # specific creation date based directory suffix.
         creation = self[:created_at] || self[:created_on]
         if self.class.use_creation_date_based_directories && creation 
@@ -182,12 +184,15 @@ module Fleximage
           directory
         end
       end
-      
+
       # Returns the path to the master image file for this record.
-      #   
-      #   @some_image.file_path #=> /var/www/myapp/uploaded_images/123.png
-      def file_path
-        "#{directory_path}/#{id}.#{self.class.image_storage_format}"
+      # 
+      # @some_image.file_path #=> /var/www/myapp/uploaded_images/123.png
+      # Returns an absolute path by default
+      # Passing 'true' into the method will return the relative file path
+      # @some_image.file_path(true) #=> /uploaded_images/123.png
+      def file_path(relative = false)
+        "#{directory_path(relative)}/#{id}.#{self.class.image_storage_format}"
       end
       
       # Sets the image file for this record to an uploaded file.  This can 
